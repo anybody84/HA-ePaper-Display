@@ -1,5 +1,9 @@
+substitutions:
+  device_name: "wyswietlacz_paper"
+
+# Core
 esphome:
-  name: epaper-display
+  name: "${device_name}"
   platform: ESP8266
   board: esp01_1m
   on_boot:
@@ -8,26 +12,50 @@ esphome:
       - delay: 10s
       - component.update: epaperdisplay
 
+# WiFi
 wifi:
-  ssid: "YOUR_SSID_HERE"
-  password: "YOUR_PASSWORD_HERE"
-
-  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  networks:
+  - ssid: !secret wifi_ssid
+    password: !secret wifi_password
+  - ssid: !secret wifi_ssid_iot
+    password: !secret wifi_password
   ap:
-    ssid: "Epaper-Display Fallback Hotspot"
-    password: "123456"
+    ssid: ${device_name}
+    password: !secret wifi_password
 
+
+# Captive portal
 captive_portal:
 
 # Enable logging
 logger:
+  level: VERY_VERBOSE
 
-# Enable Home Assistant API
+# API
 api:
 
+# OTA
 ota:
-  password: "123456"
+  password: !secret ota_password
 
+# Switch
+switch:
+  - platform: restart
+    name: "${device_name} Restart"
+
+# Text Sensors
+text_sensor:
+  - platform: wifi_info
+    ip_address:
+      name: '${device_name} IP Address'
+      icon: mdi:ip
+
+# Web server
+web_server:
+  port: 80
+  auth:
+    username: pawel
+    password: !secret ota_password
 
 font:
 
@@ -110,6 +138,8 @@ font:
       '󰤨', # mdi-wifi-strength-4
       '󰀦' # mdi-alert
       ]
+
+# Time
 time:
   - platform: homeassistant
     id: homeassistant_time
@@ -117,36 +147,34 @@ time:
 #Please edit your homeassistant sensors enitity id to match yours
 sensor:
   - platform: homeassistant
-    entity_id: sensor.xiaomi_airpurifier_air_quality_pm25 
+    entity_id: sensor.airly_pm2_5
     id: pm25_indoor
 
   - platform: homeassistant
-    entity_id: sensor.xiaomi_airpurifier_temp
+    entity_id: sensor.mediana_temperatury
     id: temp_indoor
   
   - platform: homeassistant
-    entity_id: sensor.xiaomi_airpurifier_humidity
+    entity_id: sensor.salon_atmo_humi
     id: humid_indoor
   
   - platform: homeassistant
-    entity_id: sensor.temperature
+    entity_id: sensor.real_outside_temp
     id: temp_outdoor
   
   - platform: homeassistant
-    entity_id: sensor.humidity
+    entity_id: sensor.meteo_pole_humi
     id: humid_outdoor
   
-  
   - platform: homeassistant
-    entity_id: sensor.pm2_5
+    entity_id: sensor.airly_pm2_5
     id: pm25_outdoor
 
   - platform: wifi_signal
-    name: "WiFi Signal Sensor"
+    name: '${device_name} WiFi Signal'
     id: wifisignal
     update_interval: 60s
     
-
 spi:
   clk_pin: 14
   mosi_pin: 13  #DIN
@@ -156,7 +184,7 @@ display:
     id: epaperdisplay
     cs_pin: 15
     dc_pin: 12
-    update_interval: 600s
+    update_interval: 60s
     busy_pin: 16
     reset_pin: 4
     model: 4.20in
